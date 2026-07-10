@@ -1,121 +1,254 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TruyệnMoiSS → EPUB</title>
+    <title>TruyệnMoiSS → EPUB Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    animation: { 'shimmer': 'shimmer 1.8s infinite linear' }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
-        
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
-        .container {
-            max-width: 850px;
-            margin: 30px auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            overflow: hidden;
+        .bg-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
         }
-        header {
-            background: linear-gradient(135deg, #2d3748, #1a202c);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-        }
-        .content {
-            padding: 35px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        input:focus {
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-            transition: transform 0.2s;
-        }
-        button:hover { transform: translateY(-2px); }
-        button:disabled { opacity: 0.7; cursor: not-allowed; }
-
-        .progress-container {
-            margin: 25px 0;
-            display: none;
-        }
-        .progress-bar {
-            height: 10px;
-            background: linear-gradient(90deg, #667eea, #38a169);
-            border-radius: 5px;
-            transition: width 0.4s ease;
-        }
-        .status {
-            margin-top: 15px;
-            font-size: 15px;
-            color: #4a5568;
-        }
-        .success { color: #38a169; font-weight: 500; }
-        .error { color: #e53e3e; }
+        .scrollbar-none::-webkit-scrollbar { display: none; }
+        .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>📖 TruyệnMoiSS → EPUB</h1>
-            <p>Chuyển truyện sang file EPUB nhanh chóng &amp; chất lượng cao</p>
-        </header>
-        <div class="content">
-            <form id="convertForm">
-                <input type="text" id="url" placeholder="Dán link truyện từ truyenmoiss.org" required>
-                <button type="submit" id="submitBtn">🚀 Bắt đầu tạo EPUB</button>
-            </form>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-300 font-sans flex flex-col justify-between">
 
-            <div id="progressContainer" class="progress-container">
-                <div class="status" id="statusText">Đang kết nối...</div>
-                <div style="background:#e2e8f0; height:10px; border-radius:5px; margin:12px 0;">
-                    <div id="progressBar" class="progress-bar" style="width:0%"></div>
-                </div>
-                <div class="status" id="detailText"></div>
-            </div>
-        </div>
+    <div class="absolute top-4 right-4 z-50">
+        <button id="themeToggle" class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-slate-500 dark:text-slate-400 hover:scale-105 transition-transform">
+            <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+            <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+        </button>
     </div>
 
-    <script>
-        const form = document.getElementById('convertForm');
-        const progressContainer = document.getElementById('progressContainer');
-        const statusText = document.getElementById('statusText');
-        const detailText = document.getElementById('detailText');
-        const progressBar = document.getElementById('progressBar');
-        const submitBtn = document.getElementById('submitBtn');
+    <main class="flex-1 flex items-center justify-center p-4 sm:p-6 w-full">
+        <div class="w-full max-w-[720px] bg-white/80 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-slate-700/60 transition-all duration-300 overflow-hidden">
+            
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 rounded-xl text-indigo-600 dark:text-indigo-400">
+                        <i data-lucide="book-open" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg sm:text-xl tracking-tight">TruyệnMoiSS → EPUB</h1>
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Chuyển đổi truyện sang sách điện tử chất lượng cao</p>
+                    </div>
+                </div>
+            </div>
 
+            <div class="p-5 sm:p-6 space-y-6">
+                <form id="convertForm" class="space-y-4">
+                    <div class="relative">
+                        <input type="text" id="url" placeholder="Dán đường dẫn truyện từ truyenmoiss.org..." required
+                            class="w-full pl-4 pr-12 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-xl font-medium focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none transition-all placeholder-slate-400 dark:placeholder-slate-500">
+                        <div class="absolute right-4 top-4 text-slate-400"><i data-lucide="link" class="w-5 h-5"></i></div>
+                    </div>
+                    <button type="submit" id="submitBtn" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold rounded-xl shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i> Bắt đầu xử lý dữ liệu
+                    </button>
+                </form>
+
+                <div id="dashboardContainer" class="hidden space-y-6 pt-2">
+                    
+                    <div id="statusAlertBox" class="hidden"></div>
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <div class="space-y-0.5">
+                                <span id="phaseTag" class="text-[10px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-100/30">INIT</span>
+                                <h3 id="statusMessage" class="text-sm font-semibold text-slate-700 dark:text-slate-200 pt-1">Đang kết nối API...</h3>
+                            </div>
+                            <span id="progressPercent" class="font-mono font-bold text-2xl text-indigo-600 dark:text-indigo-400">0%</span>
+                        </div>
+                        
+                        <div class="w-full h-4 bg-slate-100 dark:bg-slate-700/60 rounded-full p-0.5 overflow-hidden relative" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            <div id="mainProgressBar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-600 relative transition-all duration-300" style="width: 0%">
+                                <div id="shimmerEffect" class="absolute inset-0 w-full h-full bg-shimmer animate-shimmer"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap justify-between items-center text-xs text-slate-400 dark:text-slate-500 font-medium pt-1 gap-2">
+                            <span class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5"></i> ETA: <strong id="etaText" class="text-slate-600 dark:text-slate-300">Tính toán...</strong></span>
+                            <span id="updatedAtText">Đồng bộ: --:--:--</span>
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-100 dark:border-slate-700/60" />
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Hành trình xử lý</h4>
+                        <div class="flex justify-between items-center overflow-x-auto gap-2 pb-1 scrollbar-none" id="timelineWrapper">
+                            </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i> Số liệu chi tiết</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div class="p-3 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-xl text-center">
+                                <div id="statTotal" class="text-lg font-bold font-mono text-slate-800 dark:text-slate-100">---</div>
+                                <div class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Tổng chương</div>
+                            </div>
+                            <div class="p-3 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-xl text-center">
+                                <div id="statCompleted" class="text-lg font-bold font-mono text-emerald-500">0</div>
+                                <div class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Đã xử lý</div>
+                            </div>
+                            <div class="p-3 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-xl text-center">
+                                <div id="statCurrent" class="text-lg font-bold font-mono text-indigo-500">---</div>
+                                <div class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Đang nạp</div>
+                            </div>
+                            <div class="p-3 bg-slate-50/60 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-xl text-center">
+                                <div id="statRemaining" class="text-lg font-bold font-mono text-slate-400">---</div>
+                                <div class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Còn lại</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Phân đoạn đang đọc ghi</h4>
+                        <div id="chapterCard" class="p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-xl min-h-[68px] flex items-center justify-between">
+                            <div class="flex items-center gap-3 w-full animate-pulse" id="chapterSkeleton">
+                                <div class="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+                                <div class="space-y-1.5 flex-1">
+                                    <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
+                                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                                </div>
+                            </div>
+                            <div class="hidden items-center gap-3" id="chapterData">
+                                <div class="w-9 h-9 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-xs font-bold border border-indigo-100/30" id="chapterIndexBox">0</div>
+                                <div>
+                                    <div class="text-[11px] text-slate-400 font-medium">Phân đoạn chương hiện thời</div>
+                                    <div id="chapterTitleText" class="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[400px]">Đang tải dữ liệu gốc...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1.5"><i data-lucide="terminal" class="w-3.5 h-3.5"></i> Báo cáo hệ thống nhật ký</h4>
+                        <div id="consoleLogsBox" class="w-full h-32 bg-slate-950 text-emerald-400 font-mono text-xs p-3 rounded-xl overflow-y-auto space-y-1 select-none border border-slate-900 shadow-inner scrollbar-none">
+                            <div class="text-slate-500 italic">[Hệ thống] Đang khởi tạo kết nối dòng dữ liệu...</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-4 text-center text-xs text-slate-400 dark:text-slate-600 border-t border-slate-100 dark:border-slate-800/60 w-full">
+        &copy; 2026 Engine Chuyển Đổi Tự Động Core-System.
+    </footer>
+
+    <script>
+        // Cấu hình Timeline các bước của hệ thống
+        const PHASES_CONFIG = [
+            { id: 'INIT', label: 'Khởi tạo' },
+            { id: 'FETCH', label: 'Lấy lục' },
+            { id: 'DOWNLOAD', label: 'Tải chương' },
+            { id: 'TRANSLATE', label: 'Dịch thuật' },
+            { id: 'PACK', label: 'Tạo EPUB' },
+            { id: 'DONE', label: 'Hoàn tất' }
+        ];
+
+        // Khởi tạo Lucide Icons ngay từ đầu
+        lucide.createIcons();
+
+        // Dark/Light Mode switcher logic 
+        const themeToggleBtn = document.getElementById('themeToggle');
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // DOM Elements
+        const form = document.getElementById('convertForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        const statusAlertBox = document.getElementById('statusAlertBox');
+        
+        const phaseTag = document.getElementById('phaseTag');
+        const statusMessage = document.getElementById('statusMessage');
+        const progressPercent = document.getElementById('progressPercent');
+        const mainProgressBar = document.getElementById('mainProgressBar');
+        const shimmerEffect = document.getElementById('shimmerEffect');
+        const etaText = document.getElementById('etaText');
+        const updatedAtText = document.getElementById('updatedAtText');
+        
+        const statTotal = document.getElementById('statTotal');
+        const statCompleted = document.getElementById('statCompleted');
+        const statCurrent = document.getElementById('statCurrent');
+        const statRemaining = document.getElementById('statRemaining');
+
+        const chapterSkeleton = document.getElementById('chapterSkeleton');
+        const chapterData = document.getElementById('chapterData');
+        const chapterIndexBox = document.getElementById('chapterIndexBox');
+        const chapterTitleText = document.getElementById('chapterTitleText');
+        const consoleLogsBox = document.getElementById('consoleLogsBox');
+        const timelineWrapper = document.getElementById('timelineWrapper');
+
+        // Hàm sinh cây danh sách các bước Timeline trực quan
+        function buildTimeline(activePhase, currentStatus) {
+            const currentIdx = PHASES_CONFIG.findIndex(p => p.id === activePhase);
+            timelineWrapper.innerHTML = '';
+            
+            PHASES_CONFIG.forEach((phase, idx) => {
+                const isCompleted = idx < currentIdx || currentStatus === 'done';
+                const isActive = idx === currentIdx && currentStatus !== 'done';
+                
+                let circleClass = "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400";
+                let textClass = "text-slate-400";
+                let content = idx + 1;
+
+                if (isCompleted) {
+                    circleClass = "bg-emerald-500 border-emerald-500 text-white";
+                    textClass = "text-slate-600 dark:text-slate-400";
+                    content = "✓";
+                } else if (isActive) {
+                    circleClass = "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20 ring-4 ring-indigo-50 dark:ring-indigo-950/50 font-bold";
+                    textClass = "text-indigo-600 dark:text-indigo-400 font-bold";
+                }
+
+                const item = document.createElement('div');
+                item.className = "flex flex-col items-center flex-1 min-w-[75px] text-center";
+                item.innerHTML = `
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs border transition-all duration-300 ${circleClass}">${content}</div>
+                    <span class="text-[10px] font-medium mt-1 truncate w-full ${textClass}">${phase.label}</span>
+                `;
+                timelineWrapper.appendChild(item);
+            });
+        }
+
+        // Bắt đầu Submit form
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const url = document.getElementById('url').value.trim();
             
             submitBtn.disabled = true;
-            progressContainer.style.display = 'block';
-            updateProgress(10, "🔍 Đang quét mục lục...");
+            submitBtn.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 animate-spin"></i> Đang yêu cầu hệ thống...`;
+            lucide.createIcons();
+
+            // Mở bảng điều khiển Monitor Dashboard
+            dashboardContainer.classList.remove('hidden');
+            statusAlertBox.className = "hidden"; // clear alert
+            buildTimeline('INIT', 'processing');
 
             try {
                 const res = await fetch('/convert', {
@@ -127,55 +260,134 @@
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
 
-                pollStatus(data.task_id, data.novel_title, data.total_chapters);
+                // Khởi chạy Polling chu kỳ 1 giây/lần
+                pollProgress(data.task_id);
             } catch (err) {
-                showError(err.message || "Lỗi không xác định");
+                renderErrorState(err.message || "Lỗi thiết lập hệ thống máy chủ đầu cuối");
             }
         });
 
-        function updateProgress(percent, text, detail = "") {
-            progressBar.style.width = `${percent}%`;
-            statusText.textContent = text;
-            if (detail) detailText.textContent = detail;
-        }
-
-        function showError(message) {
-            statusText.innerHTML = `<span class="error">❌ ${message}</span>`;
-            submitBtn.disabled = false;
-        }
-
-        function pollStatus(taskId, title, total) {
+        // Hàm Polling cập nhật thời gian thực
+        function pollProgress(taskId) {
             const interval = setInterval(async () => {
                 try {
-                    const res = await fetch(`/status/${taskId}`);
+                    const res = await fetch(`/status/${taskId}`); // Hoặc /progress/${taskId} tùy API rewrite
                     const data = await res.json();
 
+                    // Cập nhật cấu hình lõi
+                    phaseTag.textContent = data.phase;
+                    statusMessage.textContent = data.message;
+                    
+                    const pct = Math.max(0, Math.min(100, Number(data.progress) || 0));
+                    progressPercent.textContent = `${pct}%`;
+                    mainProgressBar.style.width = `${pct}%`;
+                    mainProgressBar.setAttribute('aria-valuenow', pct);
+
+                    // Đồng bộ thời gian và dữ liệu ETA từ backend trả về
+                    etaText.textContent = data.extra?.eta || "Đang tính...";
+                    if(data.updated_at) {
+                        const timePart = new Date(data.updated_at).toLocaleTimeString();
+                        updatedAtText.textContent = `Đồng bộ: ${timePart}`;
+                    }
+
+                    // Đồng bộ Grid Metrics Số liệu
+                    statTotal.textContent = data.total_chapters || '---';
+                    statCompleted.textContent = data.completed_chapters || '0';
+                    statCurrent.textContent = data.current_chapter || '---';
+                    if (data.total_chapters && data.completed_chapters !== null) {
+                        statRemaining.textContent = data.total_chapters - data.completed_chapters;
+                    } else {
+                        statRemaining.textContent = '---';
+                    }
+
+                    // Đồng bộ Chapter Card
+                    if (data.chapter_title) {
+                        chapterSkeleton.classList.add('hidden');
+                        chapterData.classList.remove('hidden');
+                        chapterData.classList.add('flex');
+                        chapterIndexBox.textContent = data.current_chapter || '•';
+                        chapterTitleText.textContent = data.chapter_title;
+                    }
+
+                    // Đồng bộ và cuộn hộp Logs
+                    if (data.extra?.logs && data.extra.logs.length > 0) {
+                        consoleLogsBox.innerHTML = data.extra.logs.map(log => `<div><span class="text-slate-600">&gt;</span> ${log}</div>`).join('');
+                        consoleLogsBox.scrollTop = consoleLogsBox.scrollHeight;
+                    }
+
+                    // Vẽ lại timeline theo bước hiện tại
+                    buildTimeline(data.phase, data.status);
+
+                    // THÀNH CÔNG HOÀN TẤT
                     if (data.status === 'done') {
                         clearInterval(interval);
-                        updateProgress(100, "✅ Hoàn thành!", `Đã tạo ${title}`);
-                        detailText.innerHTML = `
-                            <a href="${data.download_url}" class="success" download style="font-size:18px; text-decoration:none;">
-                                📥 Tải EPUB ngay (${data.filename})
-                            </a>
-                        `;
-                        submitBtn.disabled = false;
+                        renderSuccessState(data);
                     } 
+                    // THẤT BẠI XẢY RA LỖI
                     else if (data.status === 'error') {
                         clearInterval(interval);
-                        showError(data.message);
-                    } 
-                    else {
-                        const pct = Math.max(10, Math.min(95, Number(data.progress) || 0));
-                        const totalText = data.total_chapters ? `Tổng ${data.total_chapters} chương` : 'Đang xác định tổng số chương...';
-                        const phaseText = data.phase === 'DOWNLOAD'
-                            ? `📥 ${data.message}`
-                            : `🔍 ${data.message}`;
-                        updateProgress(pct, `${phaseText} (${Math.floor(pct)}%)`, totalText);
+                        renderErrorState(data.message || "Lỗi trong tiến trình đóng gói.");
                     }
+
                 } catch (e) {
-                    console.error(e);
+                    console.error("Lỗi đồng bộ gói tin:", e);
                 }
-            }, 1200);
+            }, 1000); // Tần suất quét chuẩn 1 giây
+        }
+
+        // Render giao diện thành công lớn chuyên nghiệp
+        function renderSuccessState(data) {
+            shimmerEffect.classList.add('hidden');
+            mainProgressBar.className = "h-full rounded-full bg-emerald-500 transition-all duration-300";
+            progressPercent.className = "font-mono font-bold text-2xl text-emerald-500";
+            
+            statusAlertBox.className = "p-5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-xl text-center space-y-4 block animate-pulse";
+            statusAlertBox.innerHTML = `
+                <div class="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-emerald-800 dark:text-emerald-400 text-base">Hệ thống đã tạo EPUB thành công!</h3>
+                    <p class="text-xs text-emerald-600 dark:text-emerald-500/80 mt-1">File của bạn đã sẵn sàng phân phối xuống thiết bị.</p>
+                </div>
+                <div class="flex flex-wrap gap-2 justify-center pt-1">
+                    <a href="${data.download_url || '#'}" download class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition-all shadow-md">
+                        <i data-lucide="download" class="w-4 h-4"></i> Tải file ngay
+                    </a>
+                    <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold rounded-xl text-xs transition-all">
+                        Chuyển đổi truyện khác
+                    </button>
+                </div>
+            `;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `🚀 Bắt đầu tạo EPUB`;
+            lucide.createIcons();
+        }
+
+        // Render giao diện thông báo lỗi hệ thống
+        function renderErrorState(message) {
+            shimmerEffect.classList.add('hidden');
+            mainProgressBar.className = "h-full rounded-full bg-rose-500 transition-all duration-300";
+            progressPercent.className = "font-mono font-bold text-2xl text-rose-500";
+
+            statusAlertBox.className = "p-5 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl flex items-start gap-4 block";
+            statusAlertBox.innerHTML = `
+                <div class="p-2.5 bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 rounded-xl flex-shrink-0">
+                    <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                </div>
+                <div class="space-y-2 flex-1">
+                    <div>
+                        <h3 class="font-semibold text-rose-800 dark:text-rose-400 text-sm">Gặp lỗi trong quá trình biên dịch</h3>
+                        <p class="text-xs text-rose-600/90 dark:text-rose-400/80 mt-0.5">${message}</p>
+                    </div>
+                    <button onclick="window.location.reload()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[11px] font-semibold transition-all shadow-sm">
+                        Khởi động lại tác vụ
+                    </button>
+                </div>
+            `;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `🚀 Bắt đầu tạo EPUB`;
+            lucide.createIcons();
         }
     </script>
 </body>

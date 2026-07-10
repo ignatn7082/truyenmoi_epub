@@ -42,7 +42,17 @@ def create_epub_task(novel_title, chapters, task_id):
         success_count = 0
 
         print(f"[{task_id}] Đang tải nội dung {len(chapters)} chương...")
-        write_progress(task_id, 'DOWNLOAD', 55, f"Đang tải nội dung {len(chapters)} chương...", len(chapters))
+        write_progress(
+            task_id,
+            phase='DOWNLOAD',
+            progress=50,
+            message=f"Bắt đầu tải nội dung {len(chapters)} chương...",
+            total_chapters=len(chapters),
+            completed_chapters=0,
+            current_chapter=None,
+            chapter_title=None,
+            extra={'download_workers': 8}
+        )
 
         session = requests.Session()
         session.headers.update(HEADERS)
@@ -54,17 +64,60 @@ def create_epub_task(novel_title, chapters, task_id):
                 idx = futures[future]
                 try:
                     content = future.result()
+                    chapter_title = normalize_chapter_title(chapters[idx]['title'], chapters[idx]['url'], idx + 1)
                     if content and len(content.strip()) > 10:
                         chapter_contents[idx] = content
                         success_count += 1
-                        progress = 55 + int((success_count / max(len(chapters), 1)) * 35)
-                        write_progress(task_id, 'DOWNLOAD', progress, f"Đã tải {success_count}/{len(chapters)} chương", len(chapters))
+                        progress = 50 + int((success_count / max(len(chapters), 1)) * 35)
+                        write_progress(
+                            task_id,
+                            phase='DOWNLOAD',
+                            progress=progress,
+                            message=f"Đã tải {success_count}/{len(chapters)} chương",
+                            total_chapters=len(chapters),
+                            completed_chapters=success_count,
+                            current_chapter=idx + 1,
+                            chapter_title=chapter_title,
+                            extra={'downloaded_chapters': success_count}
+                        )
                     else:
                         print(f"[{task_id}] Chương {idx+1}: Nội dung trống hoặc quá ngắn")
+                        write_progress(
+                            task_id,
+                            phase='DOWNLOAD',
+                            progress=50 + int((success_count / max(len(chapters), 1)) * 35),
+                            message=f"Chương {idx+1} nội dung trống hoặc quá ngắn",
+                            total_chapters=len(chapters),
+                            completed_chapters=success_count,
+                            current_chapter=idx + 1,
+                            chapter_title=chapter_title,
+                            extra={'downloaded_chapters': success_count}
+                        )
                 except Exception as e:
                     print(f"[{task_id}] Lỗi chương {idx+1}: {e}")
+                    write_progress(
+                        task_id,
+                        phase='DOWNLOAD',
+                        progress=50 + int((success_count / max(len(chapters), 1)) * 35),
+                        message=f"Lỗi tải chương {idx+1}: {e}",
+                        total_chapters=len(chapters),
+                        completed_chapters=success_count,
+                        current_chapter=idx + 1,
+                        chapter_title=chapter_title,
+                        extra={'downloaded_chapters': success_count, 'error': str(e)}
+                    )
 
         print(f"[{task_id}] Tải xong {success_count}/{len(chapters)} chương. Đang tạo file EPUB...")
+
+        write_progress(
+            task_id,
+            phase='EPUB',
+            progress=85,
+            message=f"Đang tạo file EPUB ({success_count}/{len(chapters)} chương đã tải)",
+            total_chapters=len(chapters),
+            completed_chapters=success_count,
+            extra={'building_epub': True}
+        )
 
         # Tạo các chapter trong EPUB
         for i, (ch, content) in enumerate(zip(chapters, chapter_contents)):
@@ -105,7 +158,15 @@ def create_epub_task(novel_title, chapters, task_id):
 
         # Lưu file
         epub.write_epub(output_file, book)
-        write_progress(task_id, 'DONE', 100, 'Hoàn thành', len(chapters))
+        write_progress(
+            task_id,
+            phase='DONE',
+            progress=100,
+            message='Hoàn thành tạo EPUB',
+            total_chapters=len(chapters),
+            completed_chapters=success_count,
+            extra={'output_file': output_file}
+        )
         
         # Ghi trạng thái thành công
         with open(f"task_{task_id}.status", "w", encoding='utf-8') as f:
