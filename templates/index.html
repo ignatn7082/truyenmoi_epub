@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruyệnMoiSS → EPUB</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 35px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .progress-container {
+            margin: 25px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(90deg, #667eea, #38a169);
+            border-radius: 5px;
+            transition: width 0.4s ease;
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 15px;
+            color: #4a5568;
+        }
+        .success { color: #38a169; font-weight: 500; }
+        .error { color: #e53e3e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 TruyệnMoiSS → EPUB</h1>
+            <p>Chuyển truyện sang file EPUB nhanh chóng &amp; chất lượng cao</p>
+        </header>
+        <div class="content">
+            <form id="convertForm">
+                <input type="text" id="url" placeholder="Dán link truyện từ truyenmoiss.org" required>
+                <button type="submit" id="submitBtn">🚀 Bắt đầu tạo EPUB</button>
+            </form>
+
+            <div id="progressContainer" class="progress-container">
+                <div class="status" id="statusText">Đang kết nối...</div>
+                <div style="background:#e2e8f0; height:10px; border-radius:5px; margin:12px 0;">
+                    <div id="progressBar" class="progress-bar" style="width:0%"></div>
+                </div>
+                <div class="status" id="detailText"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('convertForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const statusText = document.getElementById('statusText');
+        const detailText = document.getElementById('detailText');
+        const progressBar = document.getElementById('progressBar');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('url').value.trim();
+            
+            submitBtn.disabled = true;
+            progressContainer.style.display = 'block';
+            updateProgress(10, "🔍 Đang quét mục lục...");
+
+            try {
+                const res = await fetch('/convert', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `url=${encodeURIComponent(url)}`
+                });
+                
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+
+                pollStatus(data.task_id, data.novel_title, data.total_chapters);
+            } catch (err) {
+                showError(err.message || "Lỗi không xác định");
+            }
+        });
+
+        function updateProgress(percent, text, detail = "") {
+            progressBar.style.width = `${percent}%`;
+            statusText.textContent = text;
+            if (detail) detailText.textContent = detail;
+        }
+
+        function showError(message) {
+            statusText.innerHTML = `<span class="error">❌ ${message}</span>`;
+            submitBtn.disabled = false;
+        }
+
+        function pollStatus(taskId, title, total) {
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/status/${taskId}`);
+                    const data = await res.json();
+
+                    if (data.status === 'done') {
+                        clearInterval(interval);
+                        updateProgress(100, "✅ Hoàn thành!", `Đã tạo ${title}`);
+                        detailText.innerHTML = `
+                            <a href="${data.download_url}" class="success" download style="font-size:18px; text-decoration:none;">
+                                📥 Tải EPUB ngay (${data.filename})
+                            </a>
+                        `;
+                        submitBtn.disabled = false;
+                    } 
+                    else if (data.status === 'error') {
+                        clearInterval(interval);
+                        showError(data.message);
+                    } 
+                    else {
+                        const pct = Math.max(10, Math.min(95, Number(data.progress) || 0));
+                        const totalText = data.total_chapters ? `Tổng ${data.total_chapters} chương` : 'Đang xác định tổng số chương...';
+                        const phaseText = data.phase === 'DOWNLOAD'
+                            ? `📥 ${data.message}`
+                            : `🔍 ${data.message}`;
+                        updateProgress(pct, `${phaseText} (${Math.floor(pct)}%)`, totalText);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
