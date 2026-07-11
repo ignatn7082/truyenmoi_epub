@@ -71,3 +71,8 @@ def clean_old_files():
                 os.remove(path)
     except:
         pass
+
+
+def get_soup_from_text(html_text):
+    from bs4 import BeautifulSoup
+    return BeautifulSoup(html_text, 'lxml')
